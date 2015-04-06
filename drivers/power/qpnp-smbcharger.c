@@ -41,7 +41,7 @@
 /* yangfangbiao@oneplus.cn,20150519  Add for reset charge current when screen is off */
 #include <linux/notifier.h>
 #include <linux/fb.h>
-#endif/*CONFIG_FB*/
+#endif /*CONFIG_FB*/
 
 #ifdef VENDOR_EDIT
 #include <linux/proc_fs.h>
@@ -4222,10 +4222,10 @@ static void handle_usb_removal(struct smbchg_chip *chip)
 		chip->usb_ov_det = false;
 	if (chip->usb_psy) {
 		pr_smb(PR_MISC, "setting usb psy type = %d\n",
-				POWER_SUPPLY_TYPE_UNKNOWN);
+				POWER_SUPPLY_TYPE_USB);
 #ifndef VENDOR_EDIT
 		power_supply_set_supply_type(chip->usb_psy,
-				POWER_SUPPLY_TYPE_UNKNOWN);
+				POWER_SUPPLY_TYPE_USB);
 		pr_smb(PR_MISC, "setting usb psy present = %d\n",
 				chip->usb_present);
 #endif
