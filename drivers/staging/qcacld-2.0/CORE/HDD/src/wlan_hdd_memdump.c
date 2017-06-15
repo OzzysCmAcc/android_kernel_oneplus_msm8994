@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2015-2016 The Linux Foundation. All rights reserved.
  *
  * Previously licensed under the ISC license by Qualcomm Atheros, Inc.
  *
@@ -423,35 +423,30 @@ static ssize_t memdump_read(struct file *file, char __user *buf,
 		hddLog(LOGE, FL("ADF context is NULL"));
 		return -EINVAL;
 	}
-	mutex_lock(&hdd_ctx->memdump_lock);
+
 	if (!hdd_ctx->memdump_in_progress) {
 		hddLog(LOGE, FL("Current mem dump request timed out/failed"));
-		status = -EINVAL;
-		goto memdump_read_fail;
+		return -EINVAL;
 	}
 
 	if (*pos < 0) {
 		hddLog(LOGE, FL("Invalid start offset for memdump read"));
-		status = -EINVAL;
-		goto memdump_read_fail;
+		return -EINVAL;
 	} else if (*pos >= FW_MEM_DUMP_SIZE || !count) {
 		hddLog(LOGE, FL("No more data to copy"));
-		status = 0;
-		goto memdump_read_fail;
+		return 0;
 	} else if (count > FW_MEM_DUMP_SIZE - *pos) {
 		count = FW_MEM_DUMP_SIZE - *pos;
 	}
 
 	if (!hdd_ctx->fw_dump_loc) {
 		hddLog(LOGE, FL("Invalid fw mem dump location"));
-		status = -EINVAL;
-		goto memdump_read_fail;
+		return -EINVAL;
 	}
 
 	if (copy_to_user(buf, hdd_ctx->fw_dump_loc + *pos, count)) {
 		hddLog(LOGE, FL("copy to user space failed"));
-		status = -EFAULT;
-		goto memdump_read_fail;
+		return -EFAULT;
 	}
 
 	/* offset(pos) should be updated here based on the copy done */
@@ -460,6 +455,7 @@ static ssize_t memdump_read(struct file *file, char __user *buf,
 	/* Entire FW memory dump copy completed */
 	if (*pos >= FW_MEM_DUMP_SIZE) {
 		paddr = hdd_ctx->dump_loc_paddr;
+		mutex_lock(&hdd_ctx->memdump_lock);
 		adf_os_mem_free_consistent(adf_ctx,
 			FW_MEM_DUMP_SIZE, hdd_ctx->fw_dump_loc, paddr, dma_ctx);
 		hdd_ctx->fw_dump_loc = NULL;
@@ -468,11 +464,10 @@ static ssize_t memdump_read(struct file *file, char __user *buf,
 		  vos_timer_getCurrentState(&hdd_ctx->memdump_cleanup_timer)) {
 			vos_timer_stop(&hdd_ctx->memdump_cleanup_timer);
 		}
+		mutex_unlock(&hdd_ctx->memdump_lock);
 	}
-	status = count;
-memdump_read_fail:
-	mutex_unlock(&hdd_ctx->memdump_lock);
-	return status;
+
+	return count;
 }
 
 /**
@@ -746,14 +741,11 @@ static ssize_t hdd_driver_memdump_read(struct file *file, char __user *buf,
 	if (0 != status)
 		return -EINVAL;
 
-	mutex_lock(&hdd_ctx->memdump_lock);
 	if (*pos < 0) {
-		mutex_unlock(&hdd_ctx->memdump_lock);
 		hddLog(LOGE, FL("Invalid start offset for memdump read"));
 		return -EINVAL;
 	} else if (!count || (hdd_ctx->driver_dump_size &&
 				(*pos >= hdd_ctx->driver_dump_size))) {
-		mutex_unlock(&hdd_ctx->memdump_lock);
 		hddLog(LOGE, FL("No more data to copy"));
 		return 0;
 	} else if ((*pos == 0) || (hdd_ctx->driver_dump_mem == NULL)) {
@@ -764,7 +756,6 @@ static ssize_t hdd_driver_memdump_read(struct file *file, char __user *buf,
 			hdd_ctx->driver_dump_mem =
 				vos_mem_malloc(DRIVER_MEM_DUMP_SIZE);
 			if (!hdd_ctx->driver_dump_mem) {
-				mutex_unlock(&hdd_ctx->memdump_lock);
 				hddLog(LOGE, FL("vos_mem_malloc failed"));
 				return -ENOMEM;
 			}
@@ -793,7 +784,6 @@ static ssize_t hdd_driver_memdump_read(struct file *file, char __user *buf,
 
 	if (copy_to_user(buf, hdd_ctx->driver_dump_mem + *pos,
 					no_of_bytes_read)) {
-		mutex_unlock(&hdd_ctx->memdump_lock);
 		hddLog(LOGE, FL("copy to user space failed"));
 		return -EFAULT;
 	}
@@ -804,8 +794,6 @@ static ssize_t hdd_driver_memdump_read(struct file *file, char __user *buf,
 	/* Entire driver memory dump copy completed */
 	if (*pos >= hdd_ctx->driver_dump_size)
 		hdd_driver_mem_cleanup();
-
-	mutex_unlock(&hdd_ctx->memdump_lock);
 
 	return no_of_bytes_read;
 }
