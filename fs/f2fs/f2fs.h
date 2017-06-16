@@ -351,8 +351,8 @@ struct f2fs_move_range {
 /* for directory operations */
 struct f2fs_dentry_ptr {
 	struct inode *inode;
-	const void *bitmap;
 	struct f2fs_dir_entry *dentry;
+	__u8 bitmap[SIZE_OF_DENTRY_BITMAP];
 	__u8 (*filename)[F2FS_SLOT_LEN];
 	int max;
 };
@@ -371,7 +371,7 @@ static inline void make_dentry_ptr(struct inode *inode,
 	} else {
 		struct f2fs_inline_dentry *t = (struct f2fs_inline_dentry *)src;
 		d->max = NR_INLINE_DENTRY;
-		d->bitmap = &t->dentry_bitmap;
+		memcpy(d->bitmap, t->dentry_bitmap, SIZE_OF_DENTRY_BITMAP);
 		d->dentry = t->dentry;
 		d->filename = t->filename;
 	}
