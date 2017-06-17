@@ -718,11 +718,13 @@ static void locate_dirty_segment(struct f2fs_sb_info *sbi, unsigned int segno)
 	valid_blocks = get_valid_blocks(sbi, segno, false);
 
 	if (valid_blocks == 0) {
+		printk("locate_dirty_segment in segment.c if");
 		__locate_dirty_segment(sbi, segno, PRE);
 		__remove_dirty_segment(sbi, segno, DIRTY);
 	} else if (valid_blocks < sbi->blocks_per_seg) {
 		__locate_dirty_segment(sbi, segno, DIRTY);
 	} else {
+		printk("locate_dirty_segment in segment.c else");
 		/* Recovery routine with SSR needs this */
 		__remove_dirty_segment(sbi, segno, DIRTY);
 	}
@@ -1995,6 +1997,7 @@ static void change_curseg(struct f2fs_sb_info *sbi, int type, bool reuse)
 	__set_test_and_inuse(sbi, new_segno);
 
 	mutex_lock(&dirty_i->seglist_lock);
+	printk("change_curseg in segment.c");
 	__remove_dirty_segment(sbi, new_segno, PRE);
 	__remove_dirty_segment(sbi, new_segno, DIRTY);
 	mutex_unlock(&dirty_i->seglist_lock);

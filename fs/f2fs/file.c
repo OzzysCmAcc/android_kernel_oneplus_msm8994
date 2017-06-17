@@ -244,6 +244,7 @@ go_write:
 		goto out;
 	}
 sync_nodes:
+	printk("f2fs_do_sync_file in file.c");
 	ret = fsync_node_pages(sbi, inode, &wbc, atomic);
 	if (ret)
 		goto out;
