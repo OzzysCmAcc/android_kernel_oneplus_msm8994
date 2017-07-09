@@ -134,6 +134,11 @@ enum {
 	register_cpu_notifier(&fn##_nb);			\
 }
 
+#define __cpu_notifier(fn, pri) {				\
+	static struct notifier_block fn##_nb __cpuinitdata =	\
+		{ .notifier_call = fn, .priority = pri };	\
+	__register_cpu_notifier(&fn##_nb);			\
+}
 extern int register_cpu_notifier(struct notifier_block *nb);
 extern int __register_cpu_notifier(struct notifier_block *nb);
 extern void unregister_cpu_notifier(struct notifier_block *nb);
