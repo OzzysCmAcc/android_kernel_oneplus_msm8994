@@ -803,7 +803,7 @@ static int qpnp_hap_parse_pwm_dt(struct qpnp_hap *hap)
 	else
 		return rc;
 
-	rc = of_property_read_u32(spmi->dev.of_node,====
+	rc = of_property_read_u32(spmi->dev.of_node,
 			"qcom,ext-pwm-dtest-line", &temp);
 	if (!rc)
 		hap->ext_pwm_dtest_line = temp;
