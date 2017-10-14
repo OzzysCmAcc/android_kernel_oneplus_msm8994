@@ -52,7 +52,6 @@ struct sched_param {
 #include <linux/llist.h>
 #include <linux/uidgid.h>
 #include <linux/gfp.h>
-#include <linux/cpufreq.h>
 
 #include <asm/processor.h>
 
@@ -339,6 +338,9 @@ extern void show_regs(struct pt_regs *);
  */
 extern void show_stack(struct task_struct *task, unsigned long *sp);
 
+void io_schedule(void);
+long io_schedule_timeout(long timeout);
+
 extern void cpu_init (void);
 extern void trap_init(void);
 extern void update_process_times(int user);
@@ -386,13 +388,6 @@ extern signed long schedule_timeout_killable(signed long timeout);
 extern signed long schedule_timeout_uninterruptible(signed long timeout);
 asmlinkage void schedule(void);
 extern void schedule_preempt_disabled(void);
-
-extern long io_schedule_timeout(long timeout);
-
-static inline void io_schedule(void)
-{
-	io_schedule_timeout(MAX_SCHEDULE_TIMEOUT);
-}
 
 struct nsproxy;
 struct user_namespace;
@@ -1160,27 +1155,6 @@ enum perf_event_task_context {
 	perf_nr_task_contexts,
 };
 
-
-#ifdef CONFIG_TASK_CPUFREQ_STATS
-struct task_cpufreq_stats {
-	int max_state;
-	/*
-	 * a table holding the current time
-	 * (in jiffies) on this CPU at
-	 * frequency freq_table[i]. freq_table can be
-         * obtained from drivers/cpufreq/freq_table.h.
-	 */
-	u64 *time_in_state;
-	/*
-	 * a table holding the cumulative time
-         * (in jiffies) spent by this task on this CPU
-	 * at frequency freq_table[i]. freq_table can be
-         * obtained from drivers/cpufreq/freq_table.h.
-	 */
-	u64 *cumulative_time_in_state;
-};
-#endif
-
 struct task_struct {
 	volatile long state;	/* -1 unrunnable, 0 runnable, >0 stopped */
 	void *stack;
@@ -1586,9 +1560,6 @@ struct task_struct {
 	unsigned int	sequential_io;
 	unsigned int	sequential_io_avg;
 #endif
-#ifdef CONFIG_TASK_CPUFREQ_STATS
-	struct task_cpufreq_stats cpufreq_stats[NR_CPUS];
-#endif
 };
 
 /* Future-safe accessor for struct task_struct's cpus_allowed. */
@@ -1616,19 +1587,6 @@ static inline struct pid *task_tgid(struct task_struct *task)
 	return task->group_leader->pids[PIDTYPE_PID].pid;
 }
 
-#ifdef CONFIG_TASK_CPUFREQ_STATS
-static inline void task_update_time_in_state(struct task_struct *task, int cpu)
-{
-	update_time_in_state(task, cpu);
-}
-
-static inline void task_update_cumulative_time_in_state(struct task_struct *task,
-						 struct task_struct *parent,
-						 int cpu)
-{
-	update_cumulative_time_in_state(task, parent, cpu);
-}
-#endif
 /*
  * Without tasklist or rcu lock it is not safe to dereference
  * the result of task_pgrp/task_session even if task == current,
@@ -2639,7 +2597,7 @@ static inline int test_and_clear_tsk_thread_flag(struct task_struct *tsk, int fl
 
 static inline int test_tsk_thread_flag(struct task_struct *tsk, int flag)
 {
-	return test_ti_thread_flag_relaxed(task_thread_info(tsk), flag);
+	return test_ti_thread_flag(task_thread_info(tsk), flag);
 }
 
 static inline void set_tsk_need_resched(struct task_struct *tsk)

@@ -1122,7 +1122,6 @@ static int xpad_init_input(struct usb_xpad *xpad)
 	}
 
 	input_dev->dev.parent = &xpad->intf->dev;
-
 	input_set_drvdata(input_dev, xpad);
 
 	input_dev->open = xpad_open;
@@ -1206,9 +1205,6 @@ static int xpad_probe(struct usb_interface *intf, const struct usb_device_id *id
 	struct usb_endpoint_descriptor *ep_irq_in;
 	int ep_irq_in_idx;
 	int i, error;
-
-	if (intf->cur_altsetting->desc.bNumEndpoints != 2)
-		return -ENODEV;
 
 	for (i = 0; xpad_device[i].idVendor; i++) {
 		if ((le16_to_cpu(udev->descriptor.idVendor) == xpad_device[i].idVendor) &&

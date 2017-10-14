@@ -180,7 +180,7 @@ static void msm_pcm_routing_cfg_pp(int port_id, int copp_idx, int topology,
         dirac_port_id = port_id;
         dirac_copp_id = copp_idx;
         break;
-#endif /*VENDOR_EDIT*/
+#endif/*VENDOR_EDIT*/
 	default:
 		/* custom topology specific feature param handlers */
 		break;
@@ -4206,7 +4206,7 @@ static const struct snd_kcontrol_new set_dirac_enable_param_to_set_controls[] = 
 	               0, 4, 0, msm_routing_get_dirac_headset_param_control,
 	               msm_routing_put_dirac_headset_param_control),	
 };
-#endif /*VENDOR_EDIT*/
+#endif/*VENDOR_EDIT*/
 
 int msm_routing_get_rms_value_control(struct snd_kcontrol *kcontrol,
 				struct snd_ctl_elem_value *ucontrol) {
@@ -6240,7 +6240,7 @@ static int msm_routing_probe(struct snd_soc_platform *platform)
 				set_dirac_enable_param_to_set_controls,
 			ARRAY_SIZE(set_dirac_enable_param_to_set_controls));
 
-#endif /*VENDOR_EDIT*/
+#endif/*VENDOR_EDIT*/
 
 	for (i = 0; i < ARRAY_SIZE(msm_snd_controls); i++) {
 		kctl = snd_ctl_new1(&msm_snd_controls[i], &channel_mux);

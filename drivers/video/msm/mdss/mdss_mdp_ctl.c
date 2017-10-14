@@ -2893,6 +2893,10 @@ int mdss_mdp_ctl_reset(struct mdss_mdp_ctl *ctl)
 		if (ctl->mfd &&(ctl->mfd->split_mode == MDP_DUAL_LM_SINGLE_DISPLAY))
 		 mdss_mdp_pipe_reset(ctl->mixer_right);
 		/*end*/
+
+		if (ctl->mfd &&
+			(ctl->mfd->split_mode == MDP_DUAL_LM_SINGLE_DISPLAY))
+				mdss_mdp_pipe_reset(ctl->mixer_right);
 	}
 
 	return 0;

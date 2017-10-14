@@ -973,7 +973,7 @@ static void cpuset_change_task_nodemask(struct task_struct *tsk,
 	 * Allow tasks that have access to memory reserves because they have
 	 * been OOM killed to get memory anywhere.
 	 */
-	if (unlikely(test_thread_flag_relaxed(TIF_MEMDIE)))
+	if (unlikely(test_thread_flag(TIF_MEMDIE)))
 		return;
 	if (current->flags & PF_EXITING) /* Let dying task have memory */
 		return;
@@ -1417,6 +1417,23 @@ static int cpuset_can_attach(struct cgroup *cgrp, struct cgroup_taskset *tset)
 out_unlock:
 	mutex_unlock(&cpuset_mutex);
 	return ret;
+}
+
+static int cpuset_allow_attach(struct cgroup *cgrp,
+			       struct cgroup_taskset *tset)
+{
+	const struct cred *cred = current_cred(), *tcred;
+	struct task_struct *task;
+
+	cgroup_taskset_for_each(task, cgrp, tset) {
+		tcred = __task_cred(task);
+
+		if ((current != task) && !capable(CAP_SYS_ADMIN) &&
+		    cred->euid != tcred->uid && cred->euid != tcred->suid)
+			return -EACCES;
+	}
+
+	return 0;
 }
 
 static void cpuset_cancel_attach(struct cgroup *cgrp,
@@ -1982,6 +1999,7 @@ struct cgroup_subsys cpuset_subsys = {
 	.css_offline = cpuset_css_offline,
 	.css_free = cpuset_css_free,
 	.can_attach = cpuset_can_attach,
+	.allow_attach = cpuset_allow_attach,
 	.cancel_attach = cpuset_cancel_attach,
 	.attach = cpuset_attach,
 	.subsys_id = cpuset_subsys_id,
@@ -2433,7 +2451,7 @@ int __cpuset_node_allowed_softwall(int node, gfp_t gfp_mask)
 	 * Allow tasks that have access to memory reserves because they have
 	 * been OOM killed to get memory anywhere.
 	 */
-	if (unlikely(test_thread_flag_relaxed(TIF_MEMDIE)))
+	if (unlikely(test_thread_flag(TIF_MEMDIE)))
 		return 1;
 	if (gfp_mask & __GFP_HARDWALL)	/* If hardwall request, stop here */
 		return 0;
@@ -2486,7 +2504,7 @@ int __cpuset_node_allowed_hardwall(int node, gfp_t gfp_mask)
 	 * Allow tasks that have access to memory reserves because they have
 	 * been OOM killed to get memory anywhere.
 	 */
-	if (unlikely(test_thread_flag_relaxed(TIF_MEMDIE)))
+	if (unlikely(test_thread_flag(TIF_MEMDIE)))
 		return 1;
 	return 0;
 }

@@ -224,7 +224,11 @@ static inline pgoff_t next_nat_addr(struct f2fs_sb_info *sbi,
 	struct f2fs_nm_info *nm_i = NM_I(sbi);
 
 	block_addr -= nm_i->nat_blkaddr;
-	block_addr ^= 1 << sbi->log_blocks_per_seg;
+	if ((block_addr >> sbi->log_blocks_per_seg) % 2)
+		block_addr -= sbi->blocks_per_seg;
+	else
+		block_addr += sbi->blocks_per_seg;
+
 	return block_addr + nm_i->nat_blkaddr;
 }
 

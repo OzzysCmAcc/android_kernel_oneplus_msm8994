@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2016, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2013-2015, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -323,10 +323,11 @@ void msm_isp_axi_free_wm(struct msm_vfe_axi_shared_data *axi_data,
 		axi_data->free_wm[stream_info->wm[i]] = 0;
 		axi_data->num_used_wm--;
 	}
-	if (stream_info->stream_src <= IDEAL_RAW)
+	if (stream_info->stream_src <= IDEAL_RAW) {
 		axi_data->num_pix_stream++;
-	else if (stream_info->stream_src < VFE_AXI_SRC_MAX)
+	} else if (stream_info->stream_src < VFE_AXI_SRC_MAX) {
 		axi_data->num_rdi_stream++;
+	}
 }
 
 void msm_isp_axi_reserve_comp_mask(
@@ -858,8 +859,7 @@ int msm_isp_release_axi_stream(struct vfe_device *vfe_dev, void *arg)
 		stream_cfg.stream_handle[0] = stream_release_cmd->stream_handle;
 		rc = msm_isp_cfg_axi_stream(vfe_dev, (void *) &stream_cfg);
 		if (rc < 0) {
-			pr_err("%s: msm_isp_cfg_axi_stream failed: %d\n",
-				 __func__, rc);
+			pr_err("%s: msm_isp_cfg_axi_stream failed: %d\n", __func__, rc);
 			return rc;
 		}
 	}
@@ -926,7 +926,7 @@ static int  msm_isp_axi_stream_enable_cfg(
 				!dual_vfe_res->axi_data[ISP_VFE0] ||
 				!dual_vfe_res->vfe_base[ISP_VFE1] ||
 				!dual_vfe_res->axi_data[ISP_VFE1]) {
-				pr_err("%s:%d failed vfe0 %pK %pK vfe %pK %pK\n",
+				pr_err("%s:%d failed vfe0 %p %p vfe %p %p\n",
 					__func__, __LINE__,
 					dual_vfe_res->vfe_base[ISP_VFE0],
 					dual_vfe_res->axi_data[ISP_VFE0],
@@ -1257,7 +1257,7 @@ static int msm_isp_cfg_ping_pong_address(struct vfe_device *vfe_dev,
 				!dual_vfe_res->axi_data[ISP_VFE0] ||
 				!dual_vfe_res->vfe_base[ISP_VFE1] ||
 				!dual_vfe_res->axi_data[ISP_VFE1]) {
-				pr_err("%s:%d failed vfe0 %pK %pK vfe %pK %pK\n",
+				pr_err("%s:%d failed vfe0 %p %p vfe %p %p\n",
 					__func__, __LINE__,
 					dual_vfe_res->vfe_base[ISP_VFE0],
 					dual_vfe_res->axi_data[ISP_VFE0],
@@ -1475,7 +1475,7 @@ int msm_isp_drop_frame(struct vfe_device *vfe_dev,
 	int rc = -1;
 
 	if (!vfe_dev || !stream_info || !ts || !output_info) {
-		pr_err("%s %d  vfe_dev %pK stream_info %pK ts %pK op_info %pK\n",
+		pr_err("%s %d  vfe_dev %p stream_info %p ts %p op_info %p\n",
 			__func__, __LINE__, vfe_dev, stream_info, ts,
 			output_info);
 		return -EINVAL;
@@ -1782,7 +1782,7 @@ int msm_isp_axi_reset(struct vfe_device *vfe_dev,
 	uint32_t bufq_handle = 0, bufq_id = 0;
 
 	if (!reset_cmd) {
-		pr_err("%s: NULL pointer reset cmd %pK\n", __func__, reset_cmd);
+		pr_err("%s: NULL pointer reset cmd %p\n", __func__, reset_cmd);
 		rc = -1;
 		return rc;
 	}
@@ -1812,7 +1812,7 @@ int msm_isp_axi_reset(struct vfe_device *vfe_dev,
 			bufq = vfe_dev->buf_mgr->ops->get_bufq(vfe_dev->buf_mgr,
 				bufq_handle);
 			if (!bufq) {
-				pr_err("%s: bufq null %pK by handle %x\n",
+				pr_err("%s: bufq null %p by handle %x\n",
 					__func__, bufq, bufq_handle);
 				continue;
 			}
@@ -2185,7 +2185,6 @@ static int msm_isp_return_empty_buffer(struct vfe_device *vfe_dev,
 		&vfe_dev->axi_data.src_info[frame_src].time_stamp, frame_id,
 		stream_info->runtime_output_format);
 
-	memset(&error_event, 0, sizeof(error_event));
 	error_event.frame_id = frame_id;
 	error_event.timestamp =
 		vfe_dev->axi_data.src_info[frame_src].time_stamp;
@@ -2659,7 +2658,7 @@ void msm_isp_axi_disable_all_wm(struct vfe_device *vfe_dev)
 	int i, j;
 
 	if (!vfe_dev || !axi_data) {
-		pr_err("%s: error %pK %pK\n", __func__, vfe_dev, axi_data);
+		pr_err("%s: error %p %p\n", __func__, vfe_dev, axi_data);
 		return;
 	}
 
